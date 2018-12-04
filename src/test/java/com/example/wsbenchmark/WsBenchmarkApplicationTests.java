@@ -193,9 +193,10 @@ public class WsBenchmarkApplicationTests {
 				DemoClient client = clients.get(c);
 
 				tpe.submit(() -> {
-					sentMessageCount.incrementAndGet();
 					client.send(message);
 				});
+
+                sentMessageCount.incrementAndGet();
 			}
 
 		}, 0, sendSampleEveryXms, TimeUnit.MILLISECONDS);
