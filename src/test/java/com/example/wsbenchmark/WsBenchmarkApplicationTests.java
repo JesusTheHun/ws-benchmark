@@ -141,10 +141,10 @@ public class WsBenchmarkApplicationTests {
 		// CONFIG //
 		////////////
 
-		int testDurationInSeconds = 180;
+		int testDurationInSeconds = 30;
 		int sendSampleEveryXms = 1000 / 15;
-		int clientsCount = 500;
-		int sendPoolSize = 4;
+		int clientsCount = 100;
+		int sendPoolSize = 8;
 
 		int sampleSize = 307200;
 
@@ -225,7 +225,7 @@ public class WsBenchmarkApplicationTests {
 
 		int totalSamplesCount = sentMessageCount.get();
 
-		while(sentMessageCount.get() != webSocketHandler.getReceivedMessageCount()) {
+		while(totalSamplesCount != webSocketHandler.getReceivedMessageCount()) {
 			Thread.sleep(100);
 		}
 
@@ -239,6 +239,7 @@ public class WsBenchmarkApplicationTests {
 		/////////////
 
 		int samplesPerSecond = (int) (totalSamplesCount * 1000 / duration);
+		long heapAllocated = Runtime.getRuntime().totalMemory() / 1024 / 1024;
 
 		BigInteger bandwidth = BigInteger.valueOf(sampleSize)
 				.multiply(BigInteger.valueOf(totalSamplesCount))
@@ -252,5 +253,6 @@ public class WsBenchmarkApplicationTests {
 		logger.info("{} samples per second", samplesPerSecond);
 		logger.info("{} MB/s total", bandwidth);
 		logger.info("{} MB/s per client", bandwidth.divide(BigInteger.valueOf(clientsCount)));
+		logger.info("Allocated heap : {} MB, or {} MB per client", heapAllocated, heapAllocated / clientsCount);
 	}
 }
