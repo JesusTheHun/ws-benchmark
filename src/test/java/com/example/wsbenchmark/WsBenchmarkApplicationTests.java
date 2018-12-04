@@ -146,12 +146,12 @@ public class WsBenchmarkApplicationTests {
 		int clientsCount = 200;
 		int sendPoolSize = 8;
 
-		int sampleSize = 307200;
+		int messageSize = 10000;
 
-		webSocketHandler.expectMessageSize(sampleSize);
+		webSocketHandler.expectMessageSize(messageSize);
 
 		String serverEndpoint = String.format("ws://localhost:%d/%s", getServerPort(), endpoint);
-		byte[] message = new byte[sampleSize];
+		byte[] message = new byte[messageSize];
 		Arrays.fill(message, (byte) 8);
 
 		///////////
@@ -242,7 +242,7 @@ public class WsBenchmarkApplicationTests {
 		int messagePerSecond = (int) (totalSamplesCount * 1000 / duration);
 		long heapAllocated = Runtime.getRuntime().totalMemory() / 1024 / 1024;
 
-		BigInteger bandwidth = BigInteger.valueOf(sampleSize)
+		BigInteger bandwidth = BigInteger.valueOf(messageSize)
 			.multiply(BigInteger.valueOf(totalSamplesCount))
 			.multiply(BigInteger.valueOf(1000))
 			.divide(BigInteger.valueOf(duration))
