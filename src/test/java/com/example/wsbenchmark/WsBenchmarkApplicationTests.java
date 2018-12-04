@@ -141,9 +141,9 @@ public class WsBenchmarkApplicationTests {
 		// CONFIG //
 		////////////
 
-		int testDurationInSeconds = 20;
+		int testDurationInSeconds = 180;
 		int sendSampleEveryXms = 1000 / 15;
-		int clientsCount = 20;
+		int clientsCount = 500;
 		int sendPoolSize = 4;
 
 		int sampleSize = 307200;
@@ -248,9 +248,9 @@ public class WsBenchmarkApplicationTests {
 				;
 
 		logger.info("Test duration : {} ms", duration);
-		logger.info("Reception delay : {} ms", delay);
+		logger.info("Reception delay : {} ms, or {} samples", delay, (delay / sendSampleEveryXms) + 1);
 		logger.info("{} samples per second", samplesPerSecond);
 		logger.info("{} MB/s total", bandwidth);
-		logger.info("{} MB/s per connection", bandwidth.divide(BigInteger.valueOf(clientsCount)));
+		logger.info("{} MB/s per client", bandwidth.divide(BigInteger.valueOf(clientsCount)));
 	}
 }
