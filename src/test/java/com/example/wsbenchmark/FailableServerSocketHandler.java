@@ -61,7 +61,10 @@ public class FailableServerSocketHandler extends AbstractWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         sessions.remove(session.getId());
-        logger.warn("Connection dropped with status {}", status);
+
+        if (status != CloseStatus.NORMAL && status != CloseStatus.GOING_AWAY) {
+            logger.warn("Connection dropped with status {}", status);
+        }
     }
 
     public void emulateFailure() throws IOException {
