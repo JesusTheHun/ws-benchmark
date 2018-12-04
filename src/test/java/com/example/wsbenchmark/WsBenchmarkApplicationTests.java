@@ -50,24 +50,24 @@ public class WsBenchmarkApplicationTests {
 	}
 
 	@Test
-	public void sendSamplesToOneServer() throws URISyntaxException, InterruptedException {
+	public void sendMessagesToOneServer() throws URISyntaxException, InterruptedException {
 
 		////////////
 		// CONFIG //
 		////////////
 
-		int samplesCountPerClient = 500;
+		int messagesCountPerClient = 500;
 		int clientsCount = 20;
 		int sendPoolSize = 40;
-		int totalSamplesCount = samplesCountPerClient * clientsCount;
+		int totalMessagesCount = messagesCountPerClient * clientsCount;
 
-		int sampleSize = 307200;
+		int messageSize = 307200;
 
-		webSocketHandler.expectMessagesCount(totalSamplesCount);
-		webSocketHandler.expectMessageSize(sampleSize);
+		webSocketHandler.expectMessagesCount(totalMessagesCount);
+		webSocketHandler.expectMessageSize(messageSize);
 
 		String serverEndpoint = String.format("ws://localhost:%d/%s", getServerPort(), endpoint);
-		byte[] message = new byte[sampleSize];
+		byte[] message = new byte[messageSize];
 		Arrays.fill(message, (byte) 8);
 
 		///////////
@@ -100,7 +100,7 @@ public class WsBenchmarkApplicationTests {
 
 		LocalDateTime startTime = LocalDateTime.now();
 
-		for (int i = 0; i < samplesCountPerClient; i++) {
+		for (int i = 0; i < messagesCountPerClient; i++) {
 			for (int c = 0; c < clientsCount; c++) {
 				DemoClient client = clients.get(c);
 
@@ -119,23 +119,23 @@ public class WsBenchmarkApplicationTests {
 
 		long duration = ChronoUnit.MILLIS.between(startTime, endTime);
 
-		int samplesPerSecond = (int) (totalSamplesCount * 1000 / duration);
+		int messagesPerSecond = (int) (totalMessagesCount * 1000 / duration);
 
-		BigInteger bandwidth = BigInteger.valueOf(sampleSize)
-				.multiply(BigInteger.valueOf(totalSamplesCount))
+		BigInteger bandwidth = BigInteger.valueOf(messageSize)
+				.multiply(BigInteger.valueOf(totalMessagesCount))
 				.multiply(BigInteger.valueOf(1000))
 				.divide(BigInteger.valueOf(duration))
 				.divide(BigInteger.valueOf(1024*1024))
 				;
 
 		logger.info("Test duration : {} ms", duration);
-		logger.info("{} samples per second", samplesPerSecond);
+		logger.info("{} messages per second", messagesPerSecond);
 		logger.info("{} MB/s total", bandwidth);
 		logger.info("{} MB/s per connection", bandwidth.divide(BigInteger.valueOf(clientsCount)));
 	}
 
 	@Test
-	public void sendSamplesToOneServerAtFixedRate() throws URISyntaxException, InterruptedException, ExecutionException {
+	public void sendMessagesToOneServerAtFixedRate() throws URISyntaxException, InterruptedException, ExecutionException {
 
 		////////////
 		// CONFIG //
@@ -143,10 +143,10 @@ public class WsBenchmarkApplicationTests {
 
 		int testDurationInSeconds = 30;
 		int sendMessageEveryXms = 1000 / 15;
-		int clientsCount = 200;
+		int clientsCount = 90;
 		int sendPoolSize = 8;
 
-		int messageSize = 10000;
+		int messageSize = 307200;
 
 		webSocketHandler.expectMessageSize(messageSize);
 
@@ -186,8 +186,8 @@ public class WsBenchmarkApplicationTests {
 
 		LocalDateTime startTime = LocalDateTime.now();
 
-		ScheduledExecutorService sampleEmitter = Executors.newSingleThreadScheduledExecutor();
-		ScheduledFuture sampleEmitterScheduler = sampleEmitter.scheduleAtFixedRate(() -> {
+		ScheduledExecutorService messageEmitter = Executors.newSingleThreadScheduledExecutor();
+		ScheduledFuture messageEmitterScheduler = messageEmitter.scheduleAtFixedRate(() -> {
 
 			for (int c = 0; c < clientsCount; c++) {
 				DemoClient client = clients.get(c);
@@ -208,25 +208,25 @@ public class WsBenchmarkApplicationTests {
 
 		ScheduledExecutorService executionTimeout = Executors.newSingleThreadScheduledExecutor();
 		executionTimeout.scheduleAtFixedRate(() -> {
-			sampleEmitterScheduler.cancel(false);
+			messageEmitterScheduler.cancel(false);
 		}, testDurationInSeconds, Integer.MAX_VALUE, TimeUnit.SECONDS);
 
 		LocalDateTime emittionEnd = null;
 
 		try {
-			sampleEmitterScheduler.get();
+			messageEmitterScheduler.get();
 		} catch (CancellationException e) {
 			// intented behavior
 			emittionEnd = LocalDateTime.now();
-			logger.info("{} samples have been emitted, termination", sentMessageCount.get());
+			logger.info("{} messages have been emitted, termination", sentMessageCount.get());
 		}
 
 		tpe.shutdown();
 		tpe.awaitTermination(1, TimeUnit.MINUTES);
 
-		int totalSamplesCount = sentMessageCount.get();
+		int totalMessagesCount = sentMessageCount.get();
 
-		while(totalSamplesCount != webSocketHandler.getReceivedMessageCount()) {
+		while(totalMessagesCount != webSocketHandler.getReceivedMessageCount()) {
 			Thread.sleep(100);
 		}
 
@@ -239,19 +239,19 @@ public class WsBenchmarkApplicationTests {
 		// RESULTS //
 		/////////////
 
-		int messagePerSecond = (int) (totalSamplesCount * 1000 / duration);
+		int messagePerSecond = (int) (totalMessagesCount * 1000 / duration);
 		long heapAllocated = Runtime.getRuntime().totalMemory() / 1024 / 1024;
 
 		BigInteger bandwidth = BigInteger.valueOf(messageSize)
-			.multiply(BigInteger.valueOf(totalSamplesCount))
+			.multiply(BigInteger.valueOf(totalMessagesCount))
 			.multiply(BigInteger.valueOf(1000))
 			.divide(BigInteger.valueOf(duration))
 			.divide(BigInteger.valueOf(1024*1024))
 		;
 
 		logger.info("Test duration : {} ms", duration);
-		logger.info("Reception delay : {} ms, or {} samples", delay, (delay / sendMessageEveryXms) + 1);
-		logger.info("{} samples per second", messagePerSecond);
+		logger.info("Reception delay : {} ms, or {} messages", delay, (delay / sendMessageEveryXms) + 1);
+		logger.info("{} messages per second", messagePerSecond);
 		logger.info("{} MB/s total", bandwidth);
 		logger.info("{} MB/s per client", bandwidth.divide(BigInteger.valueOf(clientsCount)));
 		logger.info("Allocated heap : {} MB, or {} MB per client", heapAllocated, heapAllocated / clientsCount);
