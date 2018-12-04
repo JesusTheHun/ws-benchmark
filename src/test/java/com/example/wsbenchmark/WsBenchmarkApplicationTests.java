@@ -142,8 +142,8 @@ public class WsBenchmarkApplicationTests {
 		////////////
 
 		int testDurationInSeconds = 30;
-		int sendSampleEveryXms = 1000 / 15;
-		int clientsCount = 100;
+		int sendMessageEveryXms = 1000 / 15;
+		int clientsCount = 200;
 		int sendPoolSize = 8;
 
 		int sampleSize = 307200;
@@ -199,7 +199,7 @@ public class WsBenchmarkApplicationTests {
                 sentMessageCount.incrementAndGet();
 			}
 
-		}, 0, sendSampleEveryXms, TimeUnit.MILLISECONDS);
+		}, 0, sendMessageEveryXms, TimeUnit.MILLISECONDS);
 
 
 		////////////////////////
@@ -239,19 +239,19 @@ public class WsBenchmarkApplicationTests {
 		// RESULTS //
 		/////////////
 
-		int samplesPerSecond = (int) (totalSamplesCount * 1000 / duration);
+		int messagePerSecond = (int) (totalSamplesCount * 1000 / duration);
 		long heapAllocated = Runtime.getRuntime().totalMemory() / 1024 / 1024;
 
 		BigInteger bandwidth = BigInteger.valueOf(sampleSize)
-				.multiply(BigInteger.valueOf(totalSamplesCount))
-				.multiply(BigInteger.valueOf(1000))
-				.divide(BigInteger.valueOf(duration))
-				.divide(BigInteger.valueOf(1024*1024))
-				;
+			.multiply(BigInteger.valueOf(totalSamplesCount))
+			.multiply(BigInteger.valueOf(1000))
+			.divide(BigInteger.valueOf(duration))
+			.divide(BigInteger.valueOf(1024*1024))
+		;
 
 		logger.info("Test duration : {} ms", duration);
-		logger.info("Reception delay : {} ms, or {} samples", delay, (delay / sendSampleEveryXms) + 1);
-		logger.info("{} samples per second", samplesPerSecond);
+		logger.info("Reception delay : {} ms, or {} samples", delay, (delay / sendMessageEveryXms) + 1);
+		logger.info("{} samples per second", messagePerSecond);
 		logger.info("{} MB/s total", bandwidth);
 		logger.info("{} MB/s per client", bandwidth.divide(BigInteger.valueOf(clientsCount)));
 		logger.info("Allocated heap : {} MB, or {} MB per client", heapAllocated, heapAllocated / clientsCount);
